@@ -1,6 +1,17 @@
-<div class="d-flex justify-content-center align-items-center flex-column">
-  <video playsinline muted id="webcam" width="300" height="300" #video></video>
-  <canvas #output width="300" height="300" id="output"></canvas>
+<div
+  id="main"
+  class="d-flex justify-content-center align-items-center flex-column"
+>
+  <video
+    playsinline
+    autoplay
+    muted
+    id="webcam"
+    width="500"
+    height="500"
+    #video
+  ></video>
+  <canvas #output width="500" height="500" id="output"></canvas>
   <div *ngIf="loading">
     <img src="./assets/loading.gif" />
   </div>

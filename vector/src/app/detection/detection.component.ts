@@ -35,7 +35,9 @@ export class DetectionComponent implements OnInit, AfterViewInit {
     });
     console.log("Sucessfully loaded model");
     this.loading = false;
-    this.detectPoseInRealTime(this.video, this.net);
+    this.video.nativeElement.onloadeddata = () => {
+      this.detectPoseInRealTime(this.video, this.net);
+    };
   }
 
   detectPoseInRealTime(video, net) {
@@ -44,16 +46,10 @@ export class DetectionComponent implements OnInit, AfterViewInit {
     const ctx = canvas.getContext("2d");
     const flipPoseHorizontal = true;
     const stats = new Stats();
+    stats.showPanel(0);
     async function poseDetectionFrame() {
       stats.begin();
       let poses = [];
-      net = await posenet.load({
-        architecture: "ResNet50",
-        outputStride: 16,
-        inputResolution: 250,
-        multiplier: 1.0,
-        quantBytes: 2
-      });
 
       const pose = await net.estimateSinglePose(video.nativeElement, {
         flipHorizontal: false,
@@ -76,7 +72,6 @@ export class DetectionComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit() {
-    console.log("after loading model...");
     const vid = this.video.nativeElement;
 
     if (navigator.mediaDevices.getUserMedia) {
@@ -84,7 +79,6 @@ export class DetectionComponent implements OnInit, AfterViewInit {
         .getUserMedia({ video: true })
         .then(stream => {
           vid.srcObject = stream;
-          vid.begin();
         })
         .catch(err0r => {
           console.log("Something went wrong!");

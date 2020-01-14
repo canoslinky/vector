@@ -61,6 +61,6 @@ export function drawKeypoints(keypoints, minConfidence, ctx, scale = 1) {
     }
 
     const { y, x } = keypoint.position;
-    drawPoint(ctx, y * scale, x * scale, 3, "pink");
+    drawPoint(ctx, y * scale, x * scale, 3, "black");
   }
 }
