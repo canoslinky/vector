@@ -55,14 +55,12 @@ export function drawSkeleton(keypoints, minConfidence, ctx, scale = 1) {
  * Draw pose keypoints onto a canvas
  */
 export function drawKeypoints(keypoints, minConfidence, ctx, scale = 1) {
-  console.log("draw keypoints");
   for (const keypoint of keypoints) {
     if (keypoint.score < minConfidence) {
       continue;
     }
 
     const { y, x } = keypoint.position;
-    drawPoint(ctx, y * scale, x * scale, 3, "black");
-    
+    drawPoint(ctx, y * scale, x * scale, 3, "pink");
   }
 }

@@ -6,7 +6,7 @@ import {
   AfterViewInit
 } from "@angular/core";
 import * as posenet from "@tensorflow-models/posenet";
-import * as tf from "@tensorflow/tfjs";
+import Stats from "stats.js";
 import { drawKeypoints, drawSkeleton } from "./../functions";
 
 @Component({
@@ -16,9 +16,6 @@ import { drawKeypoints, drawSkeleton } from "./../functions";
 })
 export class DetectionComponent implements OnInit, AfterViewInit {
   @ViewChild("video", { static: true }) video: ElementRef;
-  @ViewChild("canvas", { static: true })
-  canvas: ElementRef<HTMLCanvasElement>;
-  ctx: CanvasRenderingContext2D;
 
   loading = true;
   net: any;
@@ -38,36 +35,48 @@ export class DetectionComponent implements OnInit, AfterViewInit {
     });
     console.log("Sucessfully loaded model");
     this.loading = false;
+    this.detectPoseInRealTime(this.video, this.net);
+  }
 
-    this.ctx = this.canvas.nativeElement.getContext("2d");
-    this.ctx.clearRect(
-      0,
-      0,
-      this.canvas.nativeElement.width,
-      this.canvas.nativeElement.height
-    );
+  detectPoseInRealTime(video, net) {
+    let canvas;
+    canvas = document.getElementById("output");
+    const ctx = canvas.getContext("2d");
+    const flipPoseHorizontal = true;
+    const stats = new Stats();
+    async function poseDetectionFrame() {
+      stats.begin();
+      let poses = [];
+      net = await posenet.load({
+        architecture: "ResNet50",
+        outputStride: 16,
+        inputResolution: 250,
+        multiplier: 1.0,
+        quantBytes: 2
+      });
 
-    let poses = [];
-    setInterval(async () => {
-      const pose = await this.net.estimateSinglePose(this.video.nativeElement, {
+      const pose = await net.estimateSinglePose(video.nativeElement, {
         flipHorizontal: false,
         decodingMethod: "single-person"
       });
       poses = poses.concat(pose);
-
+      ctx.clearRect(0, 0, 500, 500);
       if (poses.length > 0) {
         poses.forEach(({ score, keypoints }) => {
-          if (score >= this.minPoseConfidence) {
-            drawKeypoints(keypoints, this.minPartConfidence, this.ctx);
-            //drawSkeleton(keypoints, minPartConfidence, this.ctx);
+          if (score >= 0.75) {
+            drawKeypoints(keypoints, 0.5, ctx);
+            // drawSkeleton(keypoints, minPartConfidence, this.ctx);
           }
         });
       }
-      await tf.nextFrame();
-    }, 3000);
+      stats.end();
+      requestAnimationFrame(poseDetectionFrame);
+    }
+    poseDetectionFrame();
   }
 
   async ngAfterViewInit() {
+    console.log("after loading model...");
     const vid = this.video.nativeElement;
 
     if (navigator.mediaDevices.getUserMedia) {
@@ -75,6 +84,7 @@ export class DetectionComponent implements OnInit, AfterViewInit {
         .getUserMedia({ video: true })
         .then(stream => {
           vid.srcObject = stream;
+          vid.begin();
         })
         .catch(err0r => {
           console.log("Something went wrong!");
